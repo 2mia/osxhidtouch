@@ -27,7 +27,8 @@ typedef enum {
 } ButtonState;
 
 static void simulateClick(int x, int y, ButtonState button) {
-    printf("CLICK %d %d %d\n", x, y, button);
+    x -= SCREEN_RESX;
+    printf("CLICK %d %d %s\n", x, y, button==UP?"UP":(button==DOWN?"DOWN":(button==NO_CHANGE?"NO_CHANGE":"XXX-UNKNOWN")));
     static int eventNumber = 0;
     if (button == DOWN) {
         CGEventRef move = CGEventCreateMouseEvent(NULL,
@@ -62,7 +63,7 @@ static void simulateClick(int x, int y, ButtonState button) {
 }
 
 static void submitTouch(int fingerId, int x, int y, ButtonState button) {
-    printf("%s: <%d, %d> state=%d\n", __func__, x, y, button);
+    printf("\t%s: <%d, %d> state=%d\n", __func__, x, y, button);
     static int last_x[NUM_TOUCHES] = {
         0,
     };
@@ -72,9 +73,11 @@ static void submitTouch(int fingerId, int x, int y, ButtonState button) {
     
     if (button == DOWN || button == UP) {
         if (last_x[fingerId] >0 && last_y[fingerId] > 0) {
-            printf("last <%d %d>\n", last_x[fingerId], last_y[fingerId]);
+            printf("\tlast <%d %d>\n", last_x[fingerId], last_y[fingerId]);
             simulateClick(last_x[fingerId], last_y[fingerId], button);
-            last_x[fingerId] = last_y[fingerId] = -1;
+            //last_x[fingerId] = last_y[fingerId] = -1;
+        }else{
+            printf("\tNOT sending click");
         }
     }
     else {
@@ -123,9 +126,7 @@ static void reportHidElement(HIDElement *element) {
     
     [gLock lock];
     
-    printf("\n+++++++++++\n");
-    printHidElement("report element", element);
-    printf("------------\n");
+    //printHidElement("report element", element);
     
     static int fingerId = 0;
     static ButtonState button = NO_CHANGE;
